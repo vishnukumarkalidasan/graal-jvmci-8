@@ -40,6 +40,12 @@ public interface JVMCIRuntime {
      * Gets the host JVMCI backend.
      */
     JVMCIBackend getHostJVMCIBackend();
+    
+    /**
+     * Gets the guest JVMCI backend.
+     */
+    JVMCIBackend getGuestJVMCIBackend();
+
 
     /**
      * Gets the backend for a given architecture.

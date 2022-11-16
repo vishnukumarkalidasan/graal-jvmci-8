@@ -365,6 +365,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     protected final HotSpotVMConfigStore configStore;
     private final HotSpotVMConfig config;
     private final JVMCIBackend hostBackend;
+    private final JVMCIBackend guestBackend;
 
     private final JVMCICompilerFactory compilerFactory;
     private final HotSpotJVMCICompilerFactory hsCompilerFactory;
@@ -421,15 +422,29 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         }
 
         String hostArchitecture = config.getHostArchitectureName();
-
+	String guestArchitecture = "aarch64";
+	System.out.println("*** JVMCI_DEBUG: printing architecture: \"%s\"" + hostArchitecture);
         HotSpotJVMCIBackendFactory factory;
+        HotSpotJVMCIBackendFactory factory1;
         try (InitTimer t = timer("find factory:", hostArchitecture)) {
             factory = findFactory(hostArchitecture);
         }
+	
+	//aarch64 initialization...
+	try (InitTimer t = timer("find factory:", guestArchitecture)) {
+            factory1 = findFactory(guestArchitecture);
+        }
+
 
         try (InitTimer t = timer("create JVMCI backend:", hostArchitecture)) {
             hostBackend = registerBackend(factory.createJVMCIBackend(this, null));
         }
+	
+	//create backend for aarch64
+	try (InitTimer t = timer("create JVMCI backend:", hostArchitecture)) {
+            guestBackend = registerBackend(factory1.createJVMCIBackend(this, null));
+        }
+
 
         compilerFactory = HotSpotJVMCICompilerConfig.getCompilerFactory();
         if (compilerFactory instanceof HotSpotJVMCICompilerFactory) {
@@ -647,6 +662,11 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     @Override
     public JVMCIBackend getHostJVMCIBackend() {
         return hostBackend;
+    }
+
+    @Override
+    public JVMCIBackend getGuestJVMCIBackend() {
+        return guestBackend;
     }
 
     @Override
