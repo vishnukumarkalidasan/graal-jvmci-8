@@ -95,12 +95,14 @@ void CodeBuffer::initialize(csize_t code_size, csize_t locs_size) {
   int slop = (int) CodeSection::end_slop();
 
   assert(blob() == NULL, "only once");
+  tty->print_cr("****** install code: codeBuffer initiallize before setblob ...\n\n\n");
   set_blob(BufferBlob::create(_name, code_size + (align+slop) * (SECT_LIMIT+1)));
   if (blob() == NULL) {
     // The assembler constructor will throw a fatal on an empty CodeBuffer.
     return;  // caller must test this
   }
 
+  tty->print_cr("****** install code: codeBuffer initiallize before initialize...\n\n\n");
   // Set up various pointers into the blob.
   initialize(_total_start, _total_size);
 
@@ -151,6 +153,8 @@ void CodeBuffer::initialize_oop_recorder(OopRecorder* r) {
   assert(_oop_recorder == &_default_oop_recorder && _default_oop_recorder.is_unused(), "do this once");
   DEBUG_ONLY(_default_oop_recorder.freeze());  // force unused OR to be frozen
   _oop_recorder = r;
+  //debug dump code buffer 
+  //decode_all();
 }
 
 void CodeBuffer::initialize_section_size(CodeSection* cs, csize_t size) {

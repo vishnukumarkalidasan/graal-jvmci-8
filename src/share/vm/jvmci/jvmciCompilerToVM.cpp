@@ -45,6 +45,7 @@
 #include "runtime/interfaceSupport.hpp"
 #include "runtime/jniHandles.hpp"
 #include "runtime/vframe_hp.hpp"
+//#include <iostream>
 
 JVMCIKlassHandle::JVMCIKlassHandle(Thread* thread, Klass* klass) {
   _thread = thread;
@@ -830,6 +831,7 @@ C2V_VMENTRY_0(jint, installCode, (JNIEnv *env, jobject, jobject target, jobject 
   HandleMark hm;
   JNIHandleMark jni_hm(thread);
 
+  tty->print_cr("****** Class compilertoVM: installcode...\n\n\n");
   JVMCIObject target_handle = JVMCIENV->wrap(target);
   JVMCIObject compiled_code_handle = JVMCIENV->wrap(compiled_code);
   CodeBlob* cb = NULL;
@@ -856,7 +858,7 @@ C2V_VMENTRY_0(jint, installCode, (JNIEnv *env, jobject, jobject target, jobject 
       speculations_len,
       JVMCI_CHECK_0);
 
-  if (PrintCodeCacheOnCompilation) {
+  if (PrintCodeCacheOnCompilation || 1) {
     stringStream s;
     // Dump code cache into a buffer before locking the tty,
     {
@@ -868,11 +870,16 @@ C2V_VMENTRY_0(jint, installCode, (JNIEnv *env, jobject, jobject target, jobject 
   }
 
   if (result != JVMCI::ok) {
+    JVMCI_THROW_MSG_0(InternalError, err_msg("Class compilertoVM: codecache install result is not okay :( "));
+    tty->print_cr("****** Class compilertoVM: codecache install result is not okay\n\n\n");
     assert(cb == NULL, "should be");
   } else {
     if (installed_code_handle.is_non_null()) {
       if (cb->is_nmethod()) {
-        assert(JVMCIENV->isa_HotSpotNmethod(installed_code_handle), "wrong type");
+	//std::cout << "Class compilertoVM: codecache install result is ok \n";
+    	//JVMCI_THROW_MSG_0(InternalError, err_msg("Class compilertoVM: codecache install result is ok"));
+        tty->print_cr("****** Class compilertoVM: codecache install result is ok");
+	assert(JVMCIENV->isa_HotSpotNmethod(installed_code_handle), "wrong type");
         // Clear the link to an old nmethod first
         JVMCIObject nmethod_mirror = installed_code_handle;
         JVMCIENV->invalidate_nmethod_mirror(nmethod_mirror, JVMCI_CHECK_0);

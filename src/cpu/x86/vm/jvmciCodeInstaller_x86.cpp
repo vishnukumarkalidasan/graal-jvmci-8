@@ -39,9 +39,11 @@
 
 jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, JVMCIObject method, JVMCI_TRAPS) {
   if (inst->is_call() || inst->is_jump()) {
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
     assert(NativeCall::instruction_size == (int)NativeJump::instruction_size, "unexpected size");
     return (pc_offset + NativeCall::instruction_size);
   } else if (inst->is_mov_literal64()) {
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
     // mov+call instruction pair
     jint offset = pc_offset + NativeMovConstReg::instruction_size;
     u_char* call = (u_char*) (_instructions->start() + offset);
@@ -53,13 +55,16 @@ jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, JVMC
     offset += 2; /* opcode byte + modrm byte */
     return (offset);
   } else if (inst->is_call_reg()) {
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
     // the inlined vtable stub contains a "call register" instruction
     assert(method.is_non_null(), "only valid for virtual calls");
     return (pc_offset + ((NativeCallReg *) inst)->next_instruction_offset());
   } else if (inst->is_cond_jump()) {
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
     address pc = (address) (inst);
     return pc_offset + (jint) (Assembler::locate_next_instruction(pc) - pc);
   } else {
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
     JVMCI_ERROR_0("unsupported type of instruction for call site");
   }
 }

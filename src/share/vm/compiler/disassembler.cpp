@@ -22,6 +22,7 @@
  *
  */
 
+#include <execinfo.h>
 #include "precompiled.hpp"
 #include "classfile/javaClasses.hpp"
 #include "code/codeCache.hpp"
@@ -513,6 +514,16 @@ void Disassembler::decode(address start, address end, outputStream* st, CodeStri
 }
 
 void Disassembler::decode(nmethod* nm, outputStream* st) {
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  //fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  
   if (!load_library())  return;
   decode_env env(nm, st);
   env.output()->print_cr("----------------------------------------------------------------------");

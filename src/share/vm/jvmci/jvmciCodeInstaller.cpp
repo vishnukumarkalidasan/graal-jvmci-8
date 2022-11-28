@@ -604,6 +604,7 @@ JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler,
     JVMCI_TRAPS) {
 
   CodeBuffer buffer("JVMCI Compiler CodeBuffer");
+  tty->print_cr("****** install code: JVMCI Compiler CodeBuffer...\n\n\n");
   OopRecorder* recorder = new OopRecorder(&_arena, true);
   initialize_dependencies(compiled_code, recorder, JVMCI_CHECK_OK);
 
@@ -615,8 +616,15 @@ JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler,
 #endif
 
   initialize_fields(target, compiled_code, JVMCI_CHECK_OK);
+  tty->print_cr("****** install code: JVMCI initialize_fields...\n\n\n");
   JVMCI::CodeInstallResult result = initialize_buffer(buffer, true, JVMCI_CHECK_OK);
+  tty->print_cr("****** install code: after initialize_buffer...\n\n\n");
   if (result != JVMCI::ok) {
+      //JVMCI_ERROR("\n\n\ninitialize_buffer failed.....\n\n\n");
+      //JVMCI_ERROR("\n\n\ninitialize_buffer failed.....\n\n\n");
+      //JVMCI_ERROR("\n\n\ninitialize_buffer failed.....\n\n\n");
+     // JVMCI_ERROR("\n\n\ninitialize_buffer failed.....\n\n\n");
+      //JVMCI_THROW_MSG(IllegalArgumentException, err_msg("\n\n\ninitialize_buffer failed.....\n\n\n"));
     return result;
   }
 
@@ -778,7 +786,7 @@ JVMCI::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer, bo
   HandleMark hm;
   JVMCIObjectArray sites = this->sites();
   int locs_buffer_size = JVMCIENV->get_length(sites) * (relocInfo::length_limit + sizeof(relocInfo));
-
+  //buffer.dump();
   // Allocate enough space in the stub section for the static call
   // stubs.  Stubs have extra relocs but they are managed by the stub
   // section itself so they don't need to be accounted for in the
@@ -790,29 +798,38 @@ JVMCI::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer, bo
     return JVMCI::code_too_large;
   }
 
+  tty->print_cr("****** install code: JVMCI buffer initiallize before...\n\n\n");
   buffer.initialize(total_size, locs_buffer_size);
   if (buffer.blob() == NULL) {
+  tty->print_cr("****** install code: JVMCI buffer initialize after error...\n\n\n");
     return JVMCI::cache_full;
   }
+  tty->print_cr("****** install code: JVMCI buffer initialize after...\n\n\n");
   buffer.initialize_stubs_size(stubs_size);
+  tty->print_cr("****** install code: JVMCI buffer initialize_stubs_size...\n\n\n");
   buffer.initialize_consts_size(_constants_size);
 
+  tty->print_cr("****** install code: JVMCI buffer DebugInformationRecorder...\n\n\n");
   _debug_recorder = new DebugInformationRecorder(_oop_recorder);
   _debug_recorder->set_oopmaps(new OopMapSet());
 
+  tty->print_cr("****** install code: JVMCI buffer initialize nitialize_oop_recorder...\n\n\n");
   buffer.initialize_oop_recorder(_oop_recorder);
 
+  tty->print_cr("****** install code: JVMCI buffer copy the constant data...\n\n\n");
   // copy the constant data into the newly created CodeBuffer
   address end_data = _constants->start() + _constants_size;
   JVMCIENV->copy_bytes_to(data_section(), (jbyte*) _constants->start(), 0, _constants_size);
   _constants->set_end(end_data);
 
+  tty->print_cr("****** install code: JVMCI buffer copy the code into the newly created CodeBuffer...\n\n\n");
   // copy the code into the newly created CodeBuffer
   address end_pc = _instructions->start() + _code_size;
   guarantee(_instructions->allocates2(end_pc), "initialize should have reserved enough space for all the code");
   JVMCIENV->copy_bytes_to(code(), (jbyte*) _instructions->start(), 0, _code_size);
   _instructions->set_end(end_pc);
 
+  tty->print_cr("****** install code: JVMCI before for loop ......\n\n\n");
   for (int i = 0; i < JVMCIENV->get_length(data_section_patches()); i++) {
     // HandleMark hm(THREAD);
     JVMCIObject patch = JVMCIENV->get_object_at(data_section_patches(), i);
@@ -859,25 +876,32 @@ JVMCI::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer, bo
       JVMCI_ERROR_OK("invalid constant in data section: %s", jvmci_env()->klass_name(constant));
     }
   }
+  tty->print_cr("****** install code: JVMCI after for loop before second for loop......\n\n\n");
   jint last_pc_offset = -1;
   for (int i = 0; i < JVMCIENV->get_length(sites); i++) {
     // HandleMark hm(THREAD);
     JVMCIObject site = JVMCIENV->get_object_at(sites, i);
     if (site.is_null()) {
+  tty->print_cr("****** install code: JVMCI 2nd loop site is null......\n\n\n");
       JVMCI_THROW_(NullPointerException, JVMCI::ok);
     }
 
     jint pc_offset = jvmci_env()->get_site_Site_pcOffset(site);
 
+  //buffer.decode_all();
     if (jvmci_env()->isa_site_Call(site)) {
+  tty->print_cr("****** install code: JVMCI after second isa_site_call......\n\n\n");
       TRACE_jvmci_4("call at %i", pc_offset);
       site_Call(buffer, pc_offset, site, JVMCI_CHECK_OK);
+  tty->print_cr("****** install code: JVMCI after second isa_site_call exit......\n\n\n");
     } else if (jvmci_env()->isa_site_Infopoint(site)) {
+  tty->print_cr("****** install code: JVMCI after second isa_site_infopoint......\n\n\n");
       // three reasons for infopoints denote actual safepoints
       JVMCIObject reason = jvmci_env()->get_site_Infopoint_reason(site);
       if (JVMCIENV->equals(reason, jvmci_env()->get_site_InfopointReason_SAFEPOINT()) ||
           JVMCIENV->equals(reason, jvmci_env()->get_site_InfopointReason_CALL()) ||
           JVMCIENV->equals(reason, jvmci_env()->get_site_InfopointReason_IMPLICIT_EXCEPTION())) {
+  tty->print_cr("****** install code: JVMCI after second infopoints safepoints......\n\n\n");
         TRACE_jvmci_4("safepoint at %i", pc_offset);
         site_Safepoint(buffer, pc_offset, site, JVMCI_CHECK_OK);
         if (_orig_pc_offset < 0) {
@@ -892,15 +916,19 @@ JVMCI::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer, bo
         site_Infopoint(buffer, pc_offset, site, JVMCI_CHECK_OK);
       }
     } else if (jvmci_env()->isa_site_DataPatch(site)) {
+  tty->print_cr("****** install code: JVMCI after isa site datapath......\n\n\n");
       TRACE_jvmci_4("datapatch at %i", pc_offset);
       site_DataPatch(buffer, pc_offset, site, JVMCI_CHECK_OK);
     } else if (jvmci_env()->isa_site_Mark(site)) {
+  tty->print_cr("****** install code: JVMCI after isa site mark......\n\n\n");
       TRACE_jvmci_4("mark at %i", pc_offset);
       site_Mark(buffer, pc_offset, site, JVMCI_CHECK_OK);
     } else if (jvmci_env()->isa_site_ExceptionHandler(site)) {
+  tty->print_cr("****** install code: JVMCI after isa site exception handler......\n\n\n");
       TRACE_jvmci_4("exceptionhandler at %i", pc_offset);
       site_ExceptionHandler(pc_offset, site);
     } else {
+  tty->print_cr("****** install code: JVMCI after unexpected site error......\n\n\n");
       JVMCI_ERROR_OK("unexpected site subclass: %s", jvmci_env()->klass_name(site));
     }
     last_pc_offset = pc_offset;
@@ -911,6 +939,7 @@ JVMCI::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer, bo
       ThreadToNativeFromVM ttnfv(thread);
     }
   }
+  tty->print_cr("****** install code: JVMCI after second for loop......\n\n\n");
 
 #ifndef PRODUCT
   if (comments().is_non_null()) {
@@ -923,6 +952,7 @@ JVMCI::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer, bo
     }
   }
 #endif
+  tty->print_cr("****** install code: JVMCI function return......\n\n\n");
   return JVMCI::ok;
 }
 
@@ -1214,49 +1244,66 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, JVMCIObject si
   JVMCIObject hotspot_method; // JavaMethod
   JVMCIObject foreign_call;
 
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
   if (jvmci_env()->isa_HotSpotForeignCallTarget(target)) {
     foreign_call = target;
   } else {
     hotspot_method = target;
   }
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
 
   JVMCIObject debug_info = jvmci_env()->get_site_Infopoint_debugInfo(site);
 
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
   assert(hotspot_method.is_non_null() ^ foreign_call.is_non_null(), "Call site needs exactly one type");
 
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
   NativeInstruction* inst = nativeInstruction_at(_instructions->start() + pc_offset);
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
   jint next_pc_offset = CodeInstaller::pd_next_offset(inst, pc_offset, hotspot_method, JVMCI_CHECK);
 
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
   if (debug_info.is_non_null()) {
     OopMap *map = create_oop_map(debug_info, JVMCI_CHECK);
     _debug_recorder->add_safepoint(next_pc_offset, map);
 
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
     bool return_oop = hotspot_method.is_non_null() && jvmci_env()->asMethod(hotspot_method)->is_returning_oop();
 
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
     record_scope(next_pc_offset, debug_info, CodeInstaller::FullFrame, return_oop, JVMCI_CHECK);
   }
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
 
   if (foreign_call.is_non_null()) {
     jlong foreign_call_destination = jvmci_env()->get_HotSpotForeignCallTarget_address(foreign_call);
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
     if (_immutable_pic_compilation) {
       // Use fake short distance during PIC compilation.
       foreign_call_destination = (jlong)(_instructions->start() + pc_offset);
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
     }
     CodeInstaller::pd_relocate_ForeignCall(inst, foreign_call_destination, JVMCI_CHECK);
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
   } else { // method != NULL
     if (debug_info.is_null()) {
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
       JVMCI_ERROR("debug info expected at call at %i", pc_offset);
     }
 
     TRACE_jvmci_3("method call");
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
     CodeInstaller::pd_relocate_JavaMethod(buffer, hotspot_method, pc_offset, JVMCI_CHECK);
     if (_next_call_type == INVOKESTATIC || _next_call_type == INVOKESPECIAL) {
       // Need a static call stub for transitions from compiled to interpreted.
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
       CompiledStaticCall::emit_to_interp_stub(buffer, _instructions->start() + pc_offset);
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
     }
 #if INCLUDE_AOT
     // Trampoline to far aot code.
     CompiledStaticCall::emit_to_aot_stub(buffer, _instructions->start() + pc_offset);
+  tty->print_cr("****** install code: JVMCI %s %d......\n\n\n", __func__, __LINE__);
 #endif
   }
 
