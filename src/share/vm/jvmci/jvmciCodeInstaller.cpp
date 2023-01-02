@@ -616,6 +616,7 @@ JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler,
 #endif
 
   initialize_fields(target, compiled_code, JVMCI_CHECK_OK);
+  tty->print_cr("Intialize buffer .....------------\n");
   JVMCI::CodeInstallResult result = initialize_buffer(buffer, true, JVMCI_CHECK_OK);
   if (result != JVMCI::ok) {
     return result;
@@ -623,6 +624,7 @@ JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler,
 
   int stack_slots = _total_frame_size / HeapWordSize; // conversion to words
 
+  tty->print_cr("ishotspotcompiledmethod ? .....------------\n");
   if (!jvmci_env()->isa_HotSpotCompiledNmethod(compiled_code)) {
     JVMCIObject stubName = jvmci_env()->get_HotSpotCompiledCode_name(compiled_code);
     if (stubName.is_null()) {
@@ -637,6 +639,7 @@ JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler,
                                        false);
     result = JVMCI::ok;
   } else {
+    tty->print_cr(" else of ishotspotcompiledmethod ? .....------------\n");
     JVMCICompileState* compile_state = (JVMCICompileState*) (address) jvmci_env()->get_HotSpotCompiledNmethod_compileState(compiled_code);
     if (compile_state != NULL) {
       jvmci_env()->set_compile_state(compile_state);
@@ -655,6 +658,7 @@ JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler,
       JVMCI_THROW_MSG_(IllegalArgumentException, "InstalledCode object must be a HotSpotNmethod when installing a HotSpotCompiledNmethod", JVMCI::ok);
     }
 
+    tty->print_cr(" register_method........... .....------------\n");
     JVMCIObject mirror = installed_code;
     result = runtime()->register_method(jvmci_env(), method, nmethod_handle, entry_bci, &_offsets, _orig_pc_offset, &buffer,
                                         stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table, &_implicit_exception_table,

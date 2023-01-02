@@ -43,6 +43,8 @@
 #include "gc_implementation/g1/heapRegion.hpp"
 #endif // INCLUDE_ALL_GCS
 
+#include <execinfo.h>
+
 #ifdef PRODUCT
 #define BLOCK_COMMENT(str) /* nothing */
 #define STOP(error) stop(error)
@@ -105,6 +107,7 @@ Address Address::make_array(ArrayAddress adr) {
 
 // exceedingly dangerous constructor
 Address::Address(int disp, address loc, relocInfo::relocType rtype) {
+  //tty->print("%s %s:\n", __FILE__, __func__);
   _base  = noreg;
   _index = noreg;
   _scale = no_scale;
@@ -133,6 +136,7 @@ Address::Address(int disp, address loc, relocInfo::relocType rtype) {
 #else // LP64
 
 Address Address::make_array(ArrayAddress adr) {
+  //tty->print("%s %s:\n", __FILE__, __func__);
   AddressLiteral base = adr.base();
   Address index = adr.index();
   assert(index._disp == 0, "must not have disp"); // maybe it can?
@@ -148,6 +152,7 @@ Address::Address(address loc, RelocationHolder spec) {
   _scale = no_scale;
   _disp  = (intptr_t) loc;
   _rspec = spec;
+  //tty->print("%s %s:\n", __FILE__, __func__);
 }
 
 #endif // _LP64
@@ -158,6 +163,7 @@ Address::Address(address loc, RelocationHolder spec) {
 // Address.  An index of 4 (rsp) corresponds to having no index, so convert
 // that to noreg for the Address constructor.
 Address Address::make_raw(int base, int index, int scale, int disp, relocInfo::relocType disp_reloc) {
+  //tty->print("%s %s:\n", __FILE__, __func__);
   RelocationHolder rspec;
   if (disp_reloc != relocInfo::none) {
     rspec = Relocation::spec_simple(disp_reloc);
@@ -177,11 +183,13 @@ Address Address::make_raw(int base, int index, int scale, int disp, relocInfo::r
 // Implementation of Assembler
 
 int AbstractAssembler::code_fill_byte() {
+  tty->print("%s %s:\n", __FILE__, __func__);
   return (u_char)'\xF4'; // hlt
 }
 
 // make this go away someday
 void Assembler::emit_data(jint data, relocInfo::relocType rtype, int format) {
+  //tty->print("%s %s:\n", __FILE__, __func__);
   if (rtype == relocInfo::none)
         emit_int32(data);
   else  emit_data(data, Relocation::spec_simple(rtype), format);
@@ -190,6 +198,7 @@ void Assembler::emit_data(jint data, relocInfo::relocType rtype, int format) {
 void Assembler::emit_data(jint data, RelocationHolder const& rspec, int format) {
   assert(imm_operand == 0, "default format must be immediate in this file");
   assert(inst_mark() != NULL, "must be inside InstructionMark");
+  //tty->print("%s %s:\n", __FILE__, __func__);
   if (rspec.type() !=  relocInfo::none) {
     #ifdef ASSERT
       check_relocation(rspec, format);
@@ -207,6 +216,7 @@ void Assembler::emit_data(jint data, RelocationHolder const& rspec, int format) 
 }
 
 static int encode(Register r) {
+  //tty->print("%s %s:\n", __FILE__, __func__);
   int enc = r->encoding();
   if (enc >= 8) {
     enc -= 8;
@@ -215,6 +225,7 @@ static int encode(Register r) {
 }
 
 void Assembler::emit_arith_b(int op1, int op2, Register dst, int imm8) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   assert(dst->has_byte_register(), "must have byte register");
   assert(isByte(op1) && isByte(op2), "wrong opcode");
   assert(isByte(imm8), "not a byte");
@@ -226,6 +237,7 @@ void Assembler::emit_arith_b(int op1, int op2, Register dst, int imm8) {
 
 
 void Assembler::emit_arith(int op1, int op2, Register dst, int32_t imm32) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   assert(isByte(op1) && isByte(op2), "wrong opcode");
   assert((op1 & 0x01) == 1, "should be 32bit operation");
   assert((op1 & 0x02) == 0, "sign-extension bit should not be set");
@@ -242,6 +254,7 @@ void Assembler::emit_arith(int op1, int op2, Register dst, int32_t imm32) {
 
 // Force generation of a 4 byte immediate value even if it fits into 8bit
 void Assembler::emit_arith_imm32(int op1, int op2, Register dst, int32_t imm32) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   assert(isByte(op1) && isByte(op2), "wrong opcode");
   assert((op1 & 0x01) == 1, "should be 32bit operation");
   assert((op1 & 0x02) == 0, "sign-extension bit should not be set");
@@ -252,6 +265,7 @@ void Assembler::emit_arith_imm32(int op1, int op2, Register dst, int32_t imm32) 
 
 // immediate-to-memory forms
 void Assembler::emit_arith_operand(int op1, Register rm, Address adr, int32_t imm32) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   assert((op1 & 0x01) == 1, "should be 32bit operation");
   assert((op1 & 0x02) == 0, "sign-extension bit should not be set");
   if (is8bit(imm32)) {
@@ -268,6 +282,7 @@ void Assembler::emit_arith_operand(int op1, Register rm, Address adr, int32_t im
 
 void Assembler::emit_arith(int op1, int op2, Register dst, Register src) {
   assert(isByte(op1) && isByte(op2), "wrong opcode");
+  tty->print("%s %s:\n", __FILE__, __func__);
   emit_int8(op1);
   emit_int8(op2 | encode(dst) << 3 | encode(src));
 }
@@ -279,6 +294,7 @@ void Assembler::emit_operand(Register reg, Register base, Register index,
                              int rip_relative_correction) {
   relocInfo::relocType rtype = (relocInfo::relocType) rspec.type();
 
+  //tty->print("%s %s:\n", __FILE__, __func__);
   // Encode the registers as needed in the fields they are used in
 
   int regenc = encode(reg) << 3;
@@ -394,6 +410,7 @@ void Assembler::emit_operand(Register reg, Register base, Register index,
 void Assembler::emit_operand(XMMRegister reg, Register base, Register index,
                              Address::ScaleFactor scale, int disp,
                              RelocationHolder const& rspec) {
+  //tty->print("%s %s:\n", __FILE__, __func__);
   emit_operand((Register)reg, base, index, scale, disp, rspec);
 }
 
@@ -413,6 +430,7 @@ address Assembler::locate_operand(address inst, WhichOperand which) {
 
   // If "which" is end_pc_operand, find the end of the instruction.
 
+  tty->print("%s %s:\n", __FILE__, __func__);
   address ip = inst;
   bool is_64bit = false;
 
@@ -792,6 +810,7 @@ address Assembler::locate_operand(address inst, WhichOperand which) {
 #endif // LP64
   assert(which != disp32_operand || has_disp32, "instruction has no disp32 field");
 
+  tty->print("%s %s:\n", __FILE__, __func__);
   // parse the output of emit_operand
   int op2 = 0xFF & *ip++;
   int base = op2 & 0x07;
@@ -860,6 +879,7 @@ address Assembler::locate_next_instruction(address inst) {
 
 #ifdef ASSERT
 void Assembler::check_relocation(RelocationHolder const& rspec, int format) {
+  //tty->print("%s %s:\n", __FILE__, __func__);
   address inst = inst_mark();
   assert(inst != NULL && inst < pc(), "must point to beginning of instruction");
   address opnd;
@@ -883,6 +903,7 @@ void Assembler::check_relocation(RelocationHolder const& rspec, int format) {
 #endif // ASSERT
 
 void Assembler::emit_operand32(Register reg, Address adr) {
+  //tty->print("%s %s:\n", __FILE__, __func__);
   assert(reg->encoding() < 8, "no extended registers");
   assert(!adr.base_needs_rex() && !adr.index_needs_rex(), "no extended registers");
   emit_operand(reg, adr._base, adr._index, adr._scale, adr._disp,
@@ -891,18 +912,21 @@ void Assembler::emit_operand32(Register reg, Address adr) {
 
 void Assembler::emit_operand(Register reg, Address adr,
                              int rip_relative_correction) {
+  //tty->print("%s %s:\n", __FILE__, __func__);
   emit_operand(reg, adr._base, adr._index, adr._scale, adr._disp,
                adr._rspec,
                rip_relative_correction);
 }
 
 void Assembler::emit_operand(XMMRegister reg, Address adr) {
+  //tty->print("%s %s:\n", __FILE__, __func__);
   emit_operand(reg, adr._base, adr._index, adr._scale, adr._disp,
                adr._rspec);
 }
 
 // MMX operations
 void Assembler::emit_operand(MMXRegister reg, Address adr) {
+  //tty->print("%s %s:\n", __FILE__, __func__);
   assert(!adr.base_needs_rex() && !adr.index_needs_rex(), "no extended registers");
   emit_operand((Register)reg, adr._base, adr._index, adr._scale, adr._disp, adr._rspec);
 }
@@ -910,6 +934,7 @@ void Assembler::emit_operand(MMXRegister reg, Address adr) {
 // work around gcc (3.2.1-7a) bug
 void Assembler::emit_operand(Address adr, MMXRegister reg) {
   assert(!adr.base_needs_rex() && !adr.index_needs_rex(), "no extended registers");
+  //tty->print("%s %s:\n", __FILE__, __func__);
   emit_operand((Register)reg, adr._base, adr._index, adr._scale, adr._disp, adr._rspec);
 }
 
@@ -917,6 +942,7 @@ void Assembler::emit_operand(Address adr, MMXRegister reg) {
 void Assembler::emit_farith(int b1, int b2, int i) {
   assert(isByte(b1) && isByte(b2), "wrong opcode");
   assert(0 <= i &&  i < 8, "illegal stack offset");
+  tty->print("%s %s:\n", __FILE__, __func__);
   emit_int8(b1);
   emit_int8(b2 + i);
 }
@@ -925,12 +951,14 @@ void Assembler::emit_farith(int b1, int b2, int i) {
 // Now the Assembler instructions (identical for 32/64 bits)
 
 void Assembler::adcl(Address dst, int32_t imm32) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   InstructionMark im(this);
   prefix(dst);
   emit_arith_operand(0x81, rdx, dst, imm32);
 }
 
 void Assembler::adcl(Address dst, Register src) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   InstructionMark im(this);
   prefix(dst, src);
   emit_int8(0x11);
@@ -938,11 +966,13 @@ void Assembler::adcl(Address dst, Register src) {
 }
 
 void Assembler::adcl(Register dst, int32_t imm32) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   prefix(dst);
   emit_arith(0x81, 0xD0, dst, imm32);
 }
 
 void Assembler::adcl(Register dst, Address src) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   InstructionMark im(this);
   prefix(src, dst);
   emit_int8(0x13);
@@ -955,12 +985,36 @@ void Assembler::adcl(Register dst, Register src) {
 }
 
 void Assembler::addl(Address dst, int32_t imm32) {
+  tty->print("%s %s:\n", __FILE__, __func__);
+  //backtrace..
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  //fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+
   InstructionMark im(this);
   prefix(dst);
   emit_arith_operand(0x81, rax, dst, imm32);
 }
 
 void Assembler::addl(Address dst, Register src) {
+  tty->print("%s %s:\n", __FILE__, __func__);
+  //backtrace..
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  //fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  
   InstructionMark im(this);
   prefix(dst, src);
   emit_int8(0x01);
@@ -968,11 +1022,35 @@ void Assembler::addl(Address dst, Register src) {
 }
 
 void Assembler::addl(Register dst, int32_t imm32) {
+  tty->print("%s %s:\n", __FILE__, __func__);
+  //backtrace..
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  //fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  
   prefix(dst);
   emit_arith(0x81, 0xC0, dst, imm32);
 }
 
 void Assembler::addl(Register dst, Address src) {
+  tty->print("%s %s:\n", __FILE__, __func__);
+  //backtrace..
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  //fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  
   InstructionMark im(this);
   prefix(src, dst);
   emit_int8(0x03);
@@ -980,12 +1058,25 @@ void Assembler::addl(Register dst, Address src) {
 }
 
 void Assembler::addl(Register dst, Register src) {
+  tty->print("%s %s:\n", __FILE__, __func__);
+  //backtrace..
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  //fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  
   (void) prefix_and_encode(dst->encoding(), src->encoding());
   emit_arith(0x03, 0xC0, dst, src);
 }
 
 void Assembler::addr_nop_4() {
   assert(UseAddressNop, "no CPU support");
+  tty->print("%s %s:\n", __FILE__, __func__);
   // 4 bytes: NOP DWORD PTR [EAX+0]
   emit_int8(0x0F);
   emit_int8(0x1F);
@@ -995,6 +1086,7 @@ void Assembler::addr_nop_4() {
 
 void Assembler::addr_nop_5() {
   assert(UseAddressNop, "no CPU support");
+  tty->print("%s %s:\n", __FILE__, __func__);
   // 5 bytes: NOP DWORD PTR [EAX+EAX*0+0] 8-bits offset
   emit_int8(0x0F);
   emit_int8(0x1F);
@@ -1005,6 +1097,7 @@ void Assembler::addr_nop_5() {
 
 void Assembler::addr_nop_7() {
   assert(UseAddressNop, "no CPU support");
+  tty->print("%s %s:\n", __FILE__, __func__);
   // 7 bytes: NOP DWORD PTR [EAX+0] 32-bits offset
   emit_int8(0x0F);
   emit_int8(0x1F);
@@ -1015,6 +1108,7 @@ void Assembler::addr_nop_7() {
 
 void Assembler::addr_nop_8() {
   assert(UseAddressNop, "no CPU support");
+  tty->print("%s %s:\n", __FILE__, __func__);
   // 8 bytes: NOP DWORD PTR [EAX+EAX*0+0] 32-bits offset
   emit_int8(0x0F);
   emit_int8(0x1F);
@@ -1026,26 +1120,31 @@ void Assembler::addr_nop_8() {
 
 void Assembler::addsd(XMMRegister dst, XMMRegister src) {
   NOT_LP64(assert(VM_Version::supports_sse2(), ""));
+  tty->print("%s %s:\n", __FILE__, __func__);
   emit_simd_arith(0x58, dst, src, VEX_SIMD_F2);
 }
 
 void Assembler::addsd(XMMRegister dst, Address src) {
   NOT_LP64(assert(VM_Version::supports_sse2(), ""));
+  tty->print("%s %s:\n", __FILE__, __func__);
   emit_simd_arith(0x58, dst, src, VEX_SIMD_F2);
 }
 
 void Assembler::addss(XMMRegister dst, XMMRegister src) {
   NOT_LP64(assert(VM_Version::supports_sse(), ""));
+  tty->print("%s %s:\n", __FILE__, __func__);
   emit_simd_arith(0x58, dst, src, VEX_SIMD_F3);
 }
 
 void Assembler::addss(XMMRegister dst, Address src) {
   NOT_LP64(assert(VM_Version::supports_sse(), ""));
+  tty->print("%s %s:\n", __FILE__, __func__);
   emit_simd_arith(0x58, dst, src, VEX_SIMD_F3);
 }
 
 void Assembler::aesdec(XMMRegister dst, Address src) {
   assert(VM_Version::supports_aes(), "");
+  tty->print("%s %s:\n", __FILE__, __func__);
   InstructionMark im(this);
   simd_prefix(dst, dst, src, VEX_SIMD_66, VEX_OPCODE_0F_38);
   emit_int8((unsigned char)0xDE);

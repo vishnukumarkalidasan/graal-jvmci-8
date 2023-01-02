@@ -453,6 +453,22 @@ void
 BytecodeInterpreter::run(interpreterState istate) {
 #endif
 
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
+  tty->print_cr("Hello Vishnu opcode execution\n");
   // In order to simplify some tests based on switches set at runtime
   // we invoke the interpreter a single time after switches are enabled
   // and set simpler to to test variables rather than method calls or complex
@@ -1004,7 +1020,10 @@ run:
       /* QQQ Hmm this has knowledge of direction, ought to be a stack method */
       assert(topOfStack >= istate->stack_limit(), "Stack overrun");
       assert(topOfStack < istate->stack_base(), "Stack underrun");
-
+      
+      // Vishnu Debug
+      tty->print_cr("Hello Vishnu opcode execution\n");
+      assert(1, "Hello deeeeeeeeeeeeeeeeebug from Vishnuuuu......");
 #ifdef USELABELS
       DISPATCH(opcode);
 #else

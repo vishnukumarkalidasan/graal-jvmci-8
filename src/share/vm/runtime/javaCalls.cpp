@@ -347,6 +347,8 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
 
   CompilationPolicy::compile_if_required(method, CHECK);
 
+
+  assert(1, "SSRG DEBUG PRINT BY VISHNU........");
   // Since the call stub sets up like the interpreter we call the from_interpreted_entry
   // so we can go compiled via a i2c. Otherwise initial entry method will always
   // run interpreted.

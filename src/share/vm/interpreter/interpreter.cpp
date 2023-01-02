@@ -64,6 +64,7 @@ void InterpreterCodelet::verify() {
 void InterpreterCodelet::print_on(outputStream* st) const {
   ttyLocker ttyl;
 
+    st->print_cr("----------------------------------------------------------------------");
   if (PrintInterpreter) {
     st->cr();
     st->print_cr("----------------------------------------------------------------------");
@@ -87,6 +88,11 @@ void InterpreterCodelet::print_on(outputStream* st) const {
 void AbstractInterpreter::initialize() {
   if (_code != NULL) return;
 
+  tty->print_cr("----------------------------------------------------------------------");
+  tty->print_cr("debug print from vishnu");
+  tty->print_cr("----------------------------------------------------------------------");
+  tty->print_cr("----------------------------------------------------------------------");
+  tty->print_cr("----------------------------------------------------------------------");
   // make sure 'imported' classes are initialized
   if (CountBytecodes || TraceBytecodes || StopInterpreterAt) BytecodeCounter::reset();
   if (PrintBytecodeHistogram)                                BytecodeHistogram::reset();

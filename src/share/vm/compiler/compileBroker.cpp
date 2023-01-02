@@ -2168,6 +2168,8 @@ static void post_compile(CompilerThread* thread, CompileTask* task, EventCompila
 //
 void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
   if (PrintCompilation) {
+
+    tty->print_cr("compiler thread printing\n");
     ResourceMark rm;
     task->print_line();
   }

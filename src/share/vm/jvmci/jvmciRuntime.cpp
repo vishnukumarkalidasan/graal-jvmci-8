@@ -1635,6 +1635,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::validate_compile_task_dependencies(Depend
 void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, const methodHandle& method, int entry_bci) {
   JVMCI_EXCEPTION_CONTEXT
 
+  tty->print_cr("DEBUGGGGG: JVMCIRuntime:: compile_method\n");
   JVMCICompileState* compile_state = JVMCIENV->compile_state();
 
   bool is_osr = entry_bci != InvocationEntryBci;
@@ -1661,8 +1662,11 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
     return;
   }
 
+  tty->print_cr("DEBUGGGGG: JVMCIRuntime:: hotspotruntime compileMethod\n");
   JVMCIObject result_object = JVMCIENV->call_HotSpotJVMCIRuntime_compileMethod(receiver, jvmci_method, entry_bci,
                                                                      (jlong) compile_state, compile_state->task()->compile_id());
+  
+  tty->print_cr("DEBUGGGGG: JVMCIRuntime:: hotspotruntime compileMethod done\n");
   if (!JVMCIENV->has_pending_exception()) {
     if (result_object.is_non_null()) {
       JVMCIObject failure_message = JVMCIENV->get_HotSpotCompilationRequestResult_failureMessage(result_object);
@@ -1718,6 +1722,9 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
                                 FailedSpeculation** failed_speculations,
                                 char* speculations,
                                 int speculations_len) {
+
+  tty->print_cr("DEBUGGGGG: JVMCIRuntime:: register_method call\n");
+
   JVMCI_EXCEPTION_CONTEXT;
   NMethodSweeper::possibly_sweep();
   nmethod* nm = NULL;
@@ -1796,7 +1803,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
                                  speculations, speculations_len,
                                  nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
 
-
+      tty->print_cr("DEBUGGGGG: JVMCIRuntime:: register_method - new_method creation call\n");
       // Free codeBlobs
       if (nm == NULL) {
         // The CodeCache is full.  Print out warning and disable compilation.
@@ -1841,6 +1848,8 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
                             comp_level,
                             method_name, nm->entry_point());
             }
+
+            tty->print_cr("DEBUGGGGG: JVMCIRuntime:: register_method call - instant execution\n");
             // Allow the code to be executed
             method->set_code(method, nm);
           } else {
@@ -1853,6 +1862,8 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
                             method_name,
                             entry_bci);
             }
+
+            tty->print_cr("DEBUGGGGG: JVMCIRuntime:: register_method call - delayed execution\n");
             InstanceKlass::cast(method->method_holder())->add_osr_nmethod(nm);
           }
         } else {

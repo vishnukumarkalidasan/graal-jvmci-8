@@ -148,12 +148,14 @@ CodeBuffer::~CodeBuffer() {
 }
 
 void CodeBuffer::initialize_oop_recorder(OopRecorder* r) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   assert(_oop_recorder == &_default_oop_recorder && _default_oop_recorder.is_unused(), "do this once");
   DEBUG_ONLY(_default_oop_recorder.freeze());  // force unused OR to be frozen
   _oop_recorder = r;
 }
 
 void CodeBuffer::initialize_section_size(CodeSection* cs, csize_t size) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   assert(cs != &_insts, "insts is the memory provider, not the consumer");
   csize_t slop = CodeSection::end_slop();  // margin between sections
   int align = cs->alignment();
@@ -243,6 +245,7 @@ int CodeBuffer::section_index_of(address addr) const {
 }
 
 int CodeBuffer::locator(address addr) const {
+  tty->print("%s %s:\n", __FILE__, __func__);
   for (int n = 0; n < (int)SECT_LIMIT; n++) {
     const CodeSection* cs = code_section(n);
     if (cs->allocates(addr)) {
@@ -282,6 +285,7 @@ GrowableArray<int>* CodeBuffer::create_patch_overflow() {
 // Returns a sensible address, and if it is not the label's final
 // address, notes the dependency (at 'branch_pc') on the label.
 address CodeSection::target(Label& L, address branch_pc) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   if (L.is_bound()) {
     int loc = L.loc();
     if (index() == CodeBuffer::locator_sect(loc)) {
@@ -365,6 +369,7 @@ void CodeSection::relocate(address at, RelocationHolder const& spec, int format)
 }
 
 void CodeSection::initialize_locs(int locs_capacity) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   assert(_locs_start == NULL, "only one locs init step, please");
   // Apply a priori lower limits to relocation size:
   csize_t min_locs = MAX2(size() / 16, (csize_t)4);
@@ -377,6 +382,7 @@ void CodeSection::initialize_locs(int locs_capacity) {
 }
 
 void CodeSection::initialize_shared_locs(relocInfo* buf, int length) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   assert(_locs_start == NULL, "do this before locs are allocated");
   // Internal invariant:  locs buf must be fully aligned.
   // See copy_relocations_to() below.
@@ -392,6 +398,7 @@ void CodeSection::initialize_shared_locs(relocInfo* buf, int length) {
 }
 
 void CodeSection::initialize_locs_from(const CodeSection* source_cs) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   int lcount = source_cs->locs_count();
   if (lcount != 0) {
     initialize_shared_locs(source_cs->locs_start(), lcount);
@@ -403,6 +410,7 @@ void CodeSection::initialize_locs_from(const CodeSection* source_cs) {
 }
 
 void CodeSection::expand_locs(int new_capacity) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   if (_locs_start == NULL) {
     initialize_locs(new_capacity);
     return;
@@ -431,6 +439,7 @@ void CodeSection::expand_locs(int new_capacity) {
 /// We iterate over all the sections, padding each to alignment.
 
 csize_t CodeBuffer::total_content_size() const {
+  tty->print("%s %s:\n", __FILE__, __func__);
   csize_t size_so_far = 0;
   for (int n = 0; n < (int)SECT_LIMIT; n++) {
     const CodeSection* cs = code_section(n);
@@ -442,6 +451,7 @@ csize_t CodeBuffer::total_content_size() const {
 }
 
 void CodeBuffer::compute_final_layout(CodeBuffer* dest) const {
+  tty->print("%s %s:\n", __FILE__, __func__);
   address buf = dest->_total_start;
   csize_t buf_offset = 0;
   assert(dest->_total_size >= total_content_size(), "must be big enough");
@@ -502,6 +512,7 @@ void CodeBuffer::compute_final_layout(CodeBuffer* dest) const {
 
 // Append an oop reference that keeps the class alive.
 static void append_oop_references(GrowableArray<oop>* oops, Klass* k) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   oop cl = k->klass_holder();
   if (cl != NULL && !oops->contains(cl)) {
     oops->append(cl);
@@ -509,6 +520,7 @@ static void append_oop_references(GrowableArray<oop>* oops, Klass* k) {
 }
 
 void CodeBuffer::finalize_oop_references(methodHandle mh) {
+  tty->print("%s %s:\n", __FILE__, __func__);
   No_Safepoint_Verifier nsv;
 
   GrowableArray<oop> oops;
@@ -579,6 +591,7 @@ void CodeBuffer::finalize_oop_references(methodHandle mh) {
 
 
 csize_t CodeBuffer::total_offset_of(CodeSection* cs) const {
+  tty->print("%s %s:\n", __FILE__, __func__);
   csize_t size_so_far = 0;
   for (int n = (int) SECT_FIRST; n < (int) SECT_LIMIT; n++) {
     const CodeSection* cur_cs = code_section(n);
@@ -595,6 +608,7 @@ csize_t CodeBuffer::total_offset_of(CodeSection* cs) const {
 }
 
 csize_t CodeBuffer::total_relocation_size() const {
+  tty->print("%s %s:\n", __FILE__, __func__);
   csize_t lsize = copy_relocations_to(NULL);  // dry run only
   csize_t csize = total_content_size();
   csize_t total = RelocIterator::locs_and_index_size(csize, lsize);
@@ -602,6 +616,7 @@ csize_t CodeBuffer::total_relocation_size() const {
 }
 
 csize_t CodeBuffer::copy_relocations_to(CodeBlob* dest) const {
+  tty->print("%s %s:\n", __FILE__, __func__);
   address buf = NULL;
   csize_t buf_offset = 0;
   csize_t buf_limit = 0;
